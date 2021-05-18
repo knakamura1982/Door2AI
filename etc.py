@@ -109,7 +109,7 @@ def evaluate_model(model, test_set):
     c_SI2 = 0
     for i in range(N):
         t = test_set[i] # i 番目のテストデータ
-        y = model.classify(t.carat, t.price / 1000)
+        y = model.classify(t.carat, t.price)
         if t.clarity == 'IF':
             n_IF += 1
             if y == 'IF':
@@ -125,6 +125,6 @@ def evaluate_model(model, test_set):
     print('|------------|--------|--------|')
     print('|      | IF  | {0:>5.1f}% | {1:>5.1f}% |'.format(100 * c_IF / n_IF, 100 * (n_IF - c_IF) / n_IF))
     print('| 正解 |-----|--------|--------|')
-    print('|      | SI2 | {0:>5.1f}% | {1:>5.1f}% |'.format(100 * c_SI2 / n_SI2, 100 * (n_SI2 - c_SI2) / n_SI2))
+    print('|      | SI2 | {0:>5.1f}% | {1:>5.1f}% |'.format(100 * (n_SI2 - c_SI2) / n_SI2, 100 * c_SI2 / n_SI2))
     print('--------------------------------')
     print()
