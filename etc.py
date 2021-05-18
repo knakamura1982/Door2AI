@@ -109,7 +109,7 @@ def evaluate_model(model, test_set):
     c_SI2 = 0
     for i in range(N):
         t = test_set[i] # i 番目のテストデータ
-        y = model.classify(t.carat, t.price)
+        y = model.classify(t.carat, t.price / 1000)
         if t.clarity == 'IF':
             n_IF += 1
             if y == 'IF':
