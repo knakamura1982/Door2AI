@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import time
+import math
 import torch
 from imgproc import get_zero_crossing
 from imgproc import cvt_gray2gradation
@@ -72,6 +73,72 @@ class BCVisualizer():
         z = get_zero_crossing(score - 0.5)
         img = apply_mask(g, z)
         del result
+
+        # 背景画像の設定
+        ax.imshow(img)
+
+        # 実データの描画
+        if samples is not None:
+            lab, feat = samples
+            colors = [np.asarray(c0color).reshape([1, 3]) / 255, np.asarray(c1color).reshape([1, 3]) / 255]
+            ptx = np.floor((self.size - 1) * (feat[:,0] - self.hrange[0]) / (self.hrange[1] - self.hrange[0])).astype(np.int32)
+            pty = np.floor((self.size - 1) * (feat[:,1] - self.vrange[0]) / (self.vrange[1] - self.vrange[0])).astype(np.int32)
+            ax.scatter(ptx[lab==0], pty[lab==0], c=colors[0], label=self.clabels[0])
+            ax.scatter(ptx[lab==1], pty[lab==1], c=colors[1], label=self.clabels[1])
+            ax.legend(loc='upper left')
+
+        # 縦軸・横軸の目盛りの作成
+        ax.set_xticks(np.linspace(0, self.size-1, self.bins))
+        ax.set_yticks(np.linspace(0, self.size-1, self.bins))
+        hlabels = []
+        vlabels = []
+        for i in range(0, self.bins):
+            hlabels.append(format(self.hrange[0] + i * (self.hrange[1] - self.hrange[0]) / (self.bins - 1), '.2f'))
+            vlabels.append(format(self.vrange[0] + i * (self.vrange[1] - self.vrange[0]) / (self.bins - 1), '.2f'))
+        ax.set_xticklabels(hlabels)
+        ax.set_yticklabels(vlabels)
+        ax.grid(True)
+
+        # 軸ラベルを設定
+        ax.set_xlabel(self.hlabel)
+        ax.set_ylabel(self.vlabel)
+
+        # 縦軸の上下を反転
+        ax.invert_yaxis()
+
+        # 表示（2秒後にウィンドウを閉じる）
+        plt.pause(2)
+        plt.close()
+
+
+    # 「学問への扉」用の可視化関数
+    def show_alt(self, model, c0color=(255, 0, 0), c1color=(0, 0, 255), samples=None, title=None, hlabel=None, vlabel=None, clabels=None, bins=None):
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        # パラメータ値に変更がある場合は更新
+        if title is not None: self.title = title
+        if hlabel is not None: self.hlabel = hlabel
+        if vlabel is not None: self.vlabel = vlabel
+        if clabels is not None: self.clabels = clabels
+        if bins is not None: self.bins = bins
+
+        # グラフタイトルの設定
+        ax.set_title(self.title)
+
+        # 背景画像の作成
+        score = []
+        for i in range(len(self.data)):
+            r = 0 if model.classify(self.data[i, 0], self.data[i, 1]) == 'IF' else 1
+            score.append(r)
+        score = np.asarray(score)
+        score = score.reshape([self.size, self.size])
+        c0color_light = 128 + np.asarray(c0color, dtype=np.uint8) // 2
+        c1color_light = 128 + np.asarray(c1color, dtype=np.uint8) // 2
+        g = cvt_gray2gradation(score, c0color_light, c1color_light)
+        z = get_zero_crossing(score - 0.5)
+        img = apply_mask(g, z)
 
         # 背景画像の設定
         ax.imshow(img)
